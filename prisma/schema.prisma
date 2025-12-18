@@ -1,0 +1,63 @@
+// Prisma schema for TestFlow AI
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Test sessions store information about each URL scan
+model TestSession {
+  id          String   @id @default(cuid())
+  url         String
+  userAgent   String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  tests       Test[]
+
+  @@map("test_sessions")
+}
+
+// Individual test cases generated for each session
+model Test {
+  id          String     @id @default(cuid())
+  sessionId   String
+  session     TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  code        String     // Cypress test code
+  category    String?    // 'general', 'element', 'form', etc.
+  testType    String     @default("cypress") // 'cypress', 'playwright', etc.
+
+  // Metadata
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("tests")
+}
+
+// Future: User management (when auth is added)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+// Future: Projects for organizing tests
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  userId      String?  // Future: link to users
+  createdAt   DateTime @default(now())
+
+  @@map("projects")
+}
